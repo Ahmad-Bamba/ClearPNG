@@ -1,0 +1,3 @@
+# ClearPNG Documentation
+
+Stub.
