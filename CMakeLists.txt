@@ -1,4 +1,4 @@
-# Set version info with project() command
+# Set project info
 cmake_policy(SET CMP0048 NEW)
 project(
     clearpng
@@ -16,6 +16,9 @@ set(CMAKE_CXX_STANDARD 20 CACHE STRING "Force compilation with C++20")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# export compilation database
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # OpenCL used for shader support. Shaders support will not be built if 
 # OpenCL is not found
 find_package(OpenCL)
@@ -26,8 +29,9 @@ add_subdirectory(src)
 # Enable unit tests
 option(PACKAGE_TESTS "Build the tests" ON)
 if(PACKAGE_TESTS)
-    enable_testing()
+    include(CTest)
     include(GoogleTest)
+    include(AddPackageTest)
     add_subdirectory(test)
 endif()
 
@@ -39,6 +43,8 @@ mark_as_advanced(
 
 set_target_properties(gtest PROPERTIES FOLDER extern)
 set_target_properties(gtest_main PROPERTIES FOLDER extern)
+set_target_properties(gmock PROPERTIES FOLDER extern)
+set_target_properties(gmock_main PROPERTIES FOLDER extern)
 
 # Build documentation if this is the top-level project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
