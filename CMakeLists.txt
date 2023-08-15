@@ -1,9 +1,11 @@
+set (CLEARPNG_VERSION "0.0.1")
+
 # Set project info
 cmake_policy(SET CMP0048 NEW)
 project(
     clearpng
     LANGUAGES CXX 
-    VERSION 0.0.1
+    VERSION ${CLEARPNG_VERSION}
     DESCRIPTION "PNG parser written in modern C++ with 2D shader support"
 )
 cmake_minimum_required(VERSION 3.12)

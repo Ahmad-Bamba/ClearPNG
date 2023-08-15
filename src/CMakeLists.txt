@@ -1,3 +1,5 @@
+set(OUTNAME "clearpng")
+
 set(MAIN_SOURCES
     "color.cpp"
 )
@@ -5,14 +7,14 @@ set(MAIN_SOURCES
 if (NOT MSVC)
     set(ADDITIONAL_FLAGS
         "-Wall"
-        "-Wextra" 
+        "-Wextra"
         "-Wpedantic"
         "-Werror"
     )
 else()
-    set(ADDITIONAL_FLAGS 
-        "-W4"
-        "-WX"
+    set(ADDITIONAL_FLAGS
+        "/W4"
+        "/WX"
     )
 endif()
 
@@ -22,33 +24,33 @@ add_compile_options(${ADDITIONAL_FLAGS})
 
 
 add_library(sources_obj OBJECT ${MAIN_SOURCES})
-target_include_directories(sources_obj 
+target_include_directories(sources_obj
     PRIVATE "${PROJECT_SOURCE_DIR}/include"
 )
 
-add_library(ClearCPP_Static 
-    STATIC 
+add_library(ClearPNG_Static
+    STATIC
     $<TARGET_OBJECTS:sources_obj>
 )
 
-add_library(ClearCPP_Shared
+add_library(ClearPNG_Shared
     SHARED
     $<TARGET_OBJECTS:sources_obj>
 )
 
-set_target_properties(ClearCPP_Static PROPERTIES 
-    OUTPUT_NAME "clearcpp"
+set_target_properties(ClearPNG_Static PROPERTIES
+    OUTPUT_NAME ${OUTNAME}
 )
-target_include_directories(ClearCPP_Static 
+target_include_directories(ClearPNG_Static
     INTERFACE "${PROJECT_SOURCE_DIR}/include"
 )
-set_target_properties(ClearCPP_Shared PROPERTIES 
-    OUTPUT_NAME "clearcpp"
-    VERSION 0.0.1
+set_target_properties(ClearPNG_Shared PROPERTIES
+    OUTPUT_NAME ${OUTNAME}
+    VERSION ${CLEARPNG_VERSION}
 )
-target_include_directories(ClearCPP_Shared 
+target_include_directories(ClearPNG_Shared
     INTERFACE "${PROJECT_SOURCE_DIR}/include"
 )
 
-# target_compile_options(ClearCPP_Static PUBLIC ${ADDITIONAL_FLAGS})
-# target_compile_options(ClearCPP_Shared PUBLIC ${ADDITIONAL_FLAGS})
+# target_compile_options(ClearPNG_Static PUBLIC ${ADDITIONAL_FLAGS})
+# target_compile_options(ClearPNG_Shared PUBLIC ${ADDITIONAL_FLAGS})

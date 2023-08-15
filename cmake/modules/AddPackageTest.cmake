@@ -1,9 +1,9 @@
-macro(add_package_test TESTNAME)
+macro(add_package_test TESTNAME LIBRARIES)
     # create an executable in which the tests will be stored
     add_executable(${TESTNAME} ${ARGN})
     # link the Google test infrastructure, mocking library, and a default main function to
     # the test executable.  Remove g_test_main if writing your own main function.
-    target_link_libraries(${TESTNAME} gtest gtest_main)
+    target_link_libraries(${TESTNAME} gtest gtest_main ${LIBRARIES})
     # add the include directory to the unit test target
     target_include_directories(${TESTNAME} PRIVATE
         ${PROJECT_SOURCE_DIR}/include

@@ -5,6 +5,7 @@
 #include <cstdint>
 
 namespace ClearPNG {
+
 namespace Color {
 
 template<Numeric T>
@@ -34,31 +35,31 @@ struct Red : ColorValue<uint8_t> {
     }
 
 
-    friend inline bool operator==(Red const& left, Red const& right)
+    friend inline bool operator==(Red const& lhs, Red const& rhs)
     {
-        return left.get() == right.get();
+        return lhs.get() == rhs.get();
     }
 
     friend inline bool operator==(Red const&, Green const&)
     {
         return false;
     }
-    
+
     friend inline bool operator==(Red const&, Blue const&)
     {
         return false;
     }
 
-    friend inline Red operator+(Red const& left, Red const& right)
+    friend inline Red operator+(Red const& lhs, Red const& rhs)
     {
-        int sum = left.get() + right.get();
+        int sum = lhs.get() + rhs.get();
         uint8_t new_value = clamp(sum, {0, 255});
         return Red{new_value};
     }
 
-    friend inline Red operator-(Red const& left, Red const& right)
+    friend inline Red operator-(Red const& lhs, Red const& rhs)
     {
-        int difference = left.get() - right.get();
+        int difference = lhs.get() - rhs.get();
         uint8_t new_value = clamp(difference, {0, 255});
         return Red{new_value};
     }
@@ -85,31 +86,31 @@ struct Green : ColorValue<uint8_t> {
     }
 
 
-    friend inline bool operator==(Green const& left, Green const& right)
+    friend inline bool operator==(Green const& lhs, Green const& rhs)
     {
-        return left.get() == right.get();
+        return lhs.get() == rhs.get();
     }
 
     friend inline bool operator==(Green const&, Red const&)
     {
         return false;
     }
-    
+
     friend inline bool operator==(Green const&, Blue const&)
     {
         return false;
     }
 
-    friend inline Green operator+(Green const& left, Green const& right)
+    friend inline Green operator+(Green const& lhs, Green const& rhs)
     {
-        int sum = left.get() + right.get();
+        int sum = lhs.get() + rhs.get();
         uint8_t new_value = clamp(sum, {0, 255});
         return Green{new_value};
     }
 
-    friend inline Green operator-(Green const& left, Green const& right)
+    friend inline Green operator-(Green const& lhs, Green const& rhs)
     {
-        int difference = left.get() - right.get();
+        int difference = lhs.get() - rhs.get();
         uint8_t new_value = clamp(difference, {0, 255});
         return Green{new_value};
     }
@@ -130,37 +131,37 @@ struct Green : ColorValue<uint8_t> {
 };
 
 struct Blue : ColorValue<uint8_t> {
-    explicit Blue(uint8_t _b) 
+    explicit Blue(uint8_t _b)
     {
         value = _b;
     }
 
 
-    friend inline bool operator==(Blue const& left, Blue const& right)
+    friend inline bool operator==(Blue const& lhs, Blue const& rhs)
     {
-        return left.get() == right.get();
+        return lhs.get() == rhs.get();
     }
 
     friend inline bool operator==(Blue const&, Red const&)
     {
         return false;
     }
-    
+
     friend inline bool operator==(Blue const&, Green const&)
     {
         return false;
     }
 
-    friend inline Blue operator+(Blue const& left, Blue const& right)
+    friend inline Blue operator+(Blue const& lhs, Blue const& rhs)
     {
-        int sum = left.get() + right.get();
+        int sum = lhs.get() + rhs.get();
         uint8_t new_value = clamp(sum, {0, 255});
         return Blue{new_value};
     }
 
-    friend inline Blue operator-(Blue const& left, Blue const& right)
+    friend inline Blue operator-(Blue const& lhs, Blue const& rhs)
     {
-        int difference = left.get() - right.get();
+        int difference = lhs.get() - rhs.get();
         uint8_t new_value = clamp(difference, {0, 255});
         return Blue{new_value};
     }
@@ -179,6 +180,46 @@ struct Blue : ColorValue<uint8_t> {
         return *this;
     }
 };
+
+struct RGBPixel {
+    Red red;
+    Green green;
+    Blue blue;
+
+    inline bool operator==(RGBPixel const& other) const
+    {
+        return red == other.red &&
+            green == other.green &&
+            blue == other.blue
+        ;
+    }
+
+    inline RGBPixel& operator+=(RGBPixel const& other)
+    {
+        red += other.red;
+        green += other.green;
+        blue += other.blue;
+
+        return *this;
+    }
+
+    friend inline RGBPixel operator+(RGBPixel const& lhs, RGBPixel const& rhs)
+    {
+        return RGBPixel(
+            lhs.red + rhs.red,
+            lhs.green + rhs.green,
+            lhs.blue + rhs.blue
+        );
+    }
+
+    friend RGBPixel RGBMultiply(RGBPixel const&, RGBPixel const&);
+    friend RGBPixel operator*(RGBPixel const&, RGBPixel const&);
+    RGBPixel& operator*=(RGBPixel const&);
+
+    friend RGBPixel RGBScreen(RGBPixel const& lhs, RGBPixel const& rhs);
+
+};
+
 
 } // end of namespace Color
 } // end of namespace ClearPNG
