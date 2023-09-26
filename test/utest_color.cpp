@@ -83,4 +83,5 @@ TEST(TestColor, RGBPixelArithmetic)
 
     // TODO: Test RGB pixel distance formulas
 
+    // ASSERT_FLOAT_EQ(RGBDistance())
 }

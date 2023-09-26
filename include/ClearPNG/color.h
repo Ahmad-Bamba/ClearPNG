@@ -212,13 +212,20 @@ struct RGBPixel {
         );
     }
 
-    friend RGBPixel RGBMultiply(RGBPixel const&, RGBPixel const&);
     friend RGBPixel operator*(RGBPixel const&, RGBPixel const&);
     RGBPixel& operator*=(RGBPixel const&);
-
-    friend RGBPixel RGBScreen(RGBPixel const& lhs, RGBPixel const& rhs);
-
 };
+
+// Blend mode functions
+RGBPixel RGBMultiply(RGBPixel const&, RGBPixel const&);
+RGBPixel RGBScreen(RGBPixel const&, RGBPixel const&);
+
+enum class Distance_t {
+    EUCLIDEAN,
+    WEIGHTED_EUCLIDEAN,
+    DELTA_E
+};
+
 
 
 } // end of namespace Color

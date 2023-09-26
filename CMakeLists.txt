@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.12)
+
 set (CLEARPNG_VERSION "0.0.1")
 
 # Set project info
@@ -6,9 +8,8 @@ project(
     clearpng
     LANGUAGES CXX 
     VERSION ${CLEARPNG_VERSION}
-    DESCRIPTION "PNG parser written in modern C++ with 2D shader support"
+#    DESCRIPTION "PNG parser written in modern C++ with 2D shader support"
 )
-cmake_minimum_required(VERSION 3.12)
 
 # set CMake module path
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
@@ -21,11 +22,28 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # export compilation database
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Enable format and best practices checks
+set(WITH_CLANG_TIDY OFF CACHE BOOL "Should clang-tidy and clang-format checks be enabled?")
+
 # OpenCL used for shader support. Shaders support will not be built if 
 # OpenCL is not found
 find_package(OpenCL)
 
-# Main source
+# Enable clang-tidy
+# set(CMAKE_CXX_CLANG_TIDY clang-tidy)
+
+# Force all libraries to be compiled with /MD for Windows. 
+# This avoid very confusing linker errors, especially around 
+# Google Test
+if (MSVC)
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        add_compile_options("/MDd")
+    else()
+        add_compile_definitions("/MD")
+    endif()
+endif()
+
+# Main library source
 add_subdirectory(src)
 
 # Enable unit tests
