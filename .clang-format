@@ -10,10 +10,4 @@ AccessModifierOffset: 0
 
 BreakBeforeBraces: Custom
 BraceWrapping:
-    AfterCaseLabel: false
-    AfterClass: false
-    AfterEnum: false
     AfterFunction: true
-    AfterNamespace: false
-    AfterStruct: false
-  

@@ -80,6 +80,11 @@ TEST(TestColor, RGBPixelArithmetic)
     ASSERT_EQ(RGBScreen(p1, BLACK), p1);
     // Test that screening with white results in white
     ASSERT_EQ(RGBScreen(p1, WHITE), WHITE);
+}
+
+TEST(TestColor, RGBDistances)
+{
+    ASSERT_EQ(1, 1);
 
     // TODO: Test RGB pixel distance formulas
 

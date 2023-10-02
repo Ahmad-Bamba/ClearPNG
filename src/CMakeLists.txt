@@ -1,78 +1,91 @@
 set(OUTNAME "clearpng")
 
-set(MAIN_SOURCES
+set(LIBRARY_SOURCES
     "color.cpp"
+    "image.cpp"
 )
 
 if (NOT MSVC)
-    set(ADDITIONAL_FLAGS
+    set(WARNING_FLAGS
         "-Wall"
         "-Wextra"
         "-Wpedantic"
         "-Werror"
-        "-O2"
     )
 else()
-    set(ADDITIONAL_FLAGS
+    set(WARNING_FLAGS
         "/WX"
     )
 endif()
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    if(NOT MVSC)
+        set(OPTIMIZE_LEVEL "-O0" "-g")
+    else()
+        set(OPTIMIZE_LEVEL "/O0" "/Od")
+    endif()
+else()
+    if(NOT MVSC)
+        set(OPTIMIZE_LEVEL "-O2")
+    else()
+        set(OPTIMIZE_LEVEL "/O2")
+    endif()
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
     if (NOT MSVC)
-        set(ADDITIONAL_FLAGS
-            "${ADDITIONAL_FLAGS}"
+        set(SANITIZER_FLAGS
             "-fsanitize=address"
-            "-g"
-            "-O0"
+            "-fsanitize=undefined"
+            "-fsanitize=leak"
         )
     else()
-        set(ADDITIONAL_FLAGS
-            "${ADDITIONAL_FLAGS}"
+        set(SANITIZER_FLAGS
             "/fsanitize=address"
-            "/Od"
         )
     endif()
 endif()
 
-message(STATUS "Additional flags ${ADDITIONAL_FLAGS}")
 
-
-add_library(sources_obj OBJECT ${MAIN_SOURCES})
+add_library(sources_obj OBJECT ${LIBRARY_SOURCES})
 target_include_directories(sources_obj
-    PRIVATE "${PROJECT_SOURCE_DIR}/include"
+    PRIVATE ${PROJECT_SOURCE_DIR}/include
 )
-target_compile_options(sources_obj PUBLIC ${ADDITIONAL_FLAGS})
-if(WITH_CLANG_TIDY)
-    set_target_properties(sources_obj
-        PROPERTIES 
-            CXX_CLANG_TIDY "clang-tidy;--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy;-p ${PROJECT_BINARY_DIR}"
+target_compile_options(sources_obj PUBLIC ${WARNING_FLAGS} ${OPTIMIZE_LEVEL} ${SANITIZER_FLAGS})
+set_target_properties(sources_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+if(BUILD_STATIC_ARCHIVE)
+    add_library(ClearPNG_
+        STATIC
+        $<TARGET_OBJECTS:sources_obj>
+    )
+else()
+    add_library(ClearPNG
+        SHARED
+        $<TARGET_OBJECTS:sources_obj>
     )
 endif()
 
-add_library(ClearPNG_Static
-    STATIC
-    $<TARGET_OBJECTS:sources_obj>
-)
+if (CMAKE_BUILD_TYPE STREQUAL Debug AND NOT MVSC)
+    target_link_options(ClearPNG
+        PUBLIC ${SANITIZER_FLAGS}
+    )
+endif()
 
-add_library(ClearPNG_Shared
-    SHARED
-    $<TARGET_OBJECTS:sources_obj>
-)
-
-set_target_properties(ClearPNG_Static PROPERTIES
-    OUTPUT_NAME ${OUTNAME}
-)
-target_include_directories(ClearPNG_Static
+target_include_directories(ClearPNG
     INTERFACE "${PROJECT_SOURCE_DIR}/include"
 )
-set_target_properties(ClearPNG_Shared PROPERTIES
-    OUTPUT_NAME "${OUTNAME}Shared"
+set_target_properties(ClearPNG PROPERTIES
     VERSION ${CLEARPNG_VERSION}
 )
-target_include_directories(ClearPNG_Shared
-    INTERFACE "${PROJECT_SOURCE_DIR}/include"
-)
 
-# target_compile_options(ClearPNG_Static PUBLIC ${ADDITIONAL_FLAGS})
-# target_compile_options(ClearPNG_Shared PUBLIC ${ADDITIONAL_FLAGS})
+if(WITH_CLANG_FORMAT)
+    add_custom_target(include-format COMMAND echo "Format headers.")
+    FormatDir(include-format ${PROJECT_SOURCE_DIR}/include)
+    add_dependencies(ClearPNG include-format)
+    FormatDir(ClearPNG ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
+if(WITH_CLANG_TIDY)
+    AddClangTidy(ClearPNG)
+endif()

@@ -10,11 +10,9 @@ RGBPixel RGBMultiply(RGBPixel const& lhs, RGBPixel const& rhs)
     int g = lhs.green.get() * rhs.green.get();
     int b = lhs.blue.get() * rhs.blue.get();
 
-    return RGBPixel(
-        Red{static_cast<uint8_t>(r / 255)},
-        Green{static_cast<uint8_t>(g / 255)},
-        Blue{static_cast<uint8_t>(b / 255)}
-    );
+    return RGBPixel(Red{static_cast<uint8_t>(r / 255)},
+                    Green{static_cast<uint8_t>(g / 255)},
+                    Blue{static_cast<uint8_t>(b / 255)});
 }
 
 RGBPixel operator*(RGBPixel const& lhs, RGBPixel const& rhs)
@@ -38,12 +36,10 @@ RGBPixel RGBScreen(RGBPixel const& lhs, RGBPixel const& rhs)
     int g = (255 - lhs.green.get()) * (255 - rhs.green.get());
     int b = (255 - lhs.blue.get()) * (255 - rhs.blue.get());
 
-    return RGBPixel(
-        Red{static_cast<uint8_t>(255 - r / 255)},
-        Green{static_cast<uint8_t>(255 - g / 255)},
-        Blue{static_cast<uint8_t>(255 - b / 255)}
-    );
+    return RGBPixel(Red{static_cast<uint8_t>(255 - r / 255)},
+                    Green{static_cast<uint8_t>(255 - g / 255)},
+                    Blue{static_cast<uint8_t>(255 - b / 255)});
 }
 
-} // end of namespace Color
-} // end of namespace ClearPNG
+}  // end of namespace Color
+}  // end of namespace ClearPNG
