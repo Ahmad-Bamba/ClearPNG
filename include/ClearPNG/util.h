@@ -20,4 +20,13 @@ T clamp(T const& n, ClampBounds<T> const& bounds)
     return std::max(bounds.lower, std::min(n, bounds.upper));
 }
 
+[[noreturn]] inline void unreachable()
+{
+#ifdef __GNUC__  // GCC, Clang, ICC
+    __builtin_unreachable();
+#elif defined _MSC_VER  // MSVC
+    __assume(false);
+#endif
+}
+
 }  // end of namespace ClearPNG

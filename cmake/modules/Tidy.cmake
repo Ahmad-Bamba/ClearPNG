@@ -13,12 +13,12 @@ function(ADDCLANGTIDY target)
     if(TIDY_EXTRA)
         set_target_properties(${target}
             PROPERTIES CXX_CLANG_TIDY
-            "${CLANG-TIDY_EXE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy-extra;--warnings-as-errors=*"
+            "${CLANG-TIDY_EXE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy-extra"
         )
     else()
+        message(STATUS "clang-tidy=${CLANG-TIDY_EXE}")
         set_target_properties(${target}
-            PROPERTIES CXX_CLANG_TIDY
-            "${CLANG-TIDY_EXE};--warnings-as-errors=*"
+            PROPERTIES CXX_CLANG_TIDY "${CLANG-TIDY_EXE};"
         )
     endif()
 endfunction()

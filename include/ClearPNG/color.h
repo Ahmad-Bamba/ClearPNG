@@ -5,15 +5,15 @@
 
 #include "util.h"
 
-namespace ClearPNG {
-
-namespace Color {
+namespace ClearPNG::Color {
 
 template <Numeric T>
 struct ColorValue {
     inline T get() const { return value; }
 
     inline void set(T value) { this->value = value; }
+
+    static constexpr T mask = ~0;
 
     protected:
     T value;
@@ -23,7 +23,7 @@ struct Red;
 struct Green;
 struct Blue;
 
-struct Red : ColorValue<uint8_t> {
+struct Red : public ColorValue<uint8_t> {
     explicit Red(uint8_t _r) { value = _r; }
 
     friend inline bool operator==(Red const& lhs, Red const& rhs)
@@ -38,28 +38,28 @@ struct Red : ColorValue<uint8_t> {
     friend inline Red operator+(Red const& lhs, Red const& rhs)
     {
         int sum = lhs.get() + rhs.get();
-        uint8_t new_value = clamp(sum, {0, 255});
+        uint8_t new_value = clamp(sum, {0, ColorValue<uint8_t>::mask});
         return Red{new_value};
     }
 
     friend inline Red operator-(Red const& lhs, Red const& rhs)
     {
         int difference = lhs.get() - rhs.get();
-        uint8_t new_value = clamp(difference, {0, 255});
+        uint8_t new_value = clamp(difference, {0, ColorValue<uint8_t>::mask});
         return Red{new_value};
     }
 
     inline Red& operator+=(Red const& other)
     {
         int sum = value + other.get();
-        value = clamp(sum, {0, 255});
+        value = clamp(sum, {0, ColorValue<uint8_t>::mask});
         return *this;
     }
 
     inline Red& operator-=(Red const& other)
     {
         int difference = value - other.get();
-        value = clamp(difference, {0, 255});
+        value = clamp(difference, {0, ColorValue<uint8_t>::mask});
         return *this;
     }
 };
@@ -79,28 +79,28 @@ struct Green : ColorValue<uint8_t> {
     friend inline Green operator+(Green const& lhs, Green const& rhs)
     {
         int sum = lhs.get() + rhs.get();
-        uint8_t new_value = clamp(sum, {0, 255});
+        uint8_t new_value = clamp(sum, {0, ColorValue<uint8_t>::mask});
         return Green{new_value};
     }
 
     friend inline Green operator-(Green const& lhs, Green const& rhs)
     {
         int difference = lhs.get() - rhs.get();
-        uint8_t new_value = clamp(difference, {0, 255});
+        uint8_t new_value = clamp(difference, {0, ColorValue<uint8_t>::mask});
         return Green{new_value};
     }
 
     inline Green& operator+=(Green const& other)
     {
         int sum = value + other.get();
-        value = clamp(sum, {0, 255});
+        value = clamp(sum, {0, ColorValue<uint8_t>::mask});
         return *this;
     }
 
     inline Green& operator-=(Green const& other)
     {
         int difference = value - other.get();
-        value = clamp(difference, {0, 255});
+        value = clamp(difference, {0, ColorValue<uint8_t>::mask});
         return *this;
     }
 };
@@ -120,28 +120,28 @@ struct Blue : ColorValue<uint8_t> {
     friend inline Blue operator+(Blue const& lhs, Blue const& rhs)
     {
         int sum = lhs.get() + rhs.get();
-        uint8_t new_value = clamp(sum, {0, 255});
+        uint8_t new_value = clamp(sum, {0, ColorValue<uint8_t>::mask});
         return Blue{new_value};
     }
 
     friend inline Blue operator-(Blue const& lhs, Blue const& rhs)
     {
         int difference = lhs.get() - rhs.get();
-        uint8_t new_value = clamp(difference, {0, 255});
+        uint8_t new_value = clamp(difference, {0, ColorValue<uint8_t>::mask});
         return Blue{new_value};
     }
 
     inline Blue& operator+=(Blue const& other)
     {
         int sum = value + other.get();
-        value = clamp(sum, {0, 255});
+        value = clamp(sum, {0, ColorValue<uint8_t>::mask});
         return *this;
     }
 
     inline Blue& operator-=(Blue const& other)
     {
         int difference = value - other.get();
-        value = clamp(difference, {0, 255});
+        value = clamp(difference, {0, ColorValue<uint8_t>::mask});
         return *this;
     }
 };
@@ -150,6 +150,8 @@ struct RGBPixel {
     Red red;
     Green green;
     Blue blue;
+
+    RGBPixel(Red _r, Green _g, Blue _b) : red{_r}, green{_g}, blue{_b} {}
 
     inline bool operator==(RGBPixel const& other) const
     {
@@ -187,7 +189,7 @@ enum class Distance_t { EUCLIDEAN, WEIGHTED_EUCLIDEAN, DELTA_E };
 // CRTP.
 template <typename Derived, typename PixelT>
 struct CalculateDistanceImpl {
-    float operator()(PixelT const& lhs, PixelT const& rhs)
+    float operator()(PixelT const& lhs, PixelT const& rhs) noexcept
     {
         return (*static_cast<Derived*>(this))(lhs, rhs);
     }
@@ -196,26 +198,35 @@ struct CalculateDistanceImpl {
 template <Distance_t algorithm>
 struct RGBDistance
     : public CalculateDistanceImpl<RGBDistance<algorithm>, RGBPixel> {
-    // TODO: impl
-    float operator()(RGBPixel const& lhs, RGBPixel const& rhs)
+    float operator()(RGBPixel const& lhs, RGBPixel const& rhs) noexcept
     {
-        if constexpr (std::is_same_v<algorithm, Distance_t::EUCLIDEAN>) {
-            auto red_diff_squared = (lhs.red.get() - rhs.red.get()) *
-                                    (lhs.red.get() - rhs.red.get());
-            auto green_diff_squared = (lhs.green.get() - rhs.green.get()) *
-                                      (lhs.green.get() - rhs.green.get());
-            auto blue_diff_squared = (lhs.blue.get() - rhs.blue.get()) *
-                                     (lhs.blue.get() - rhs.blue.get());
-            return std::sqrt(red_diff_squared + green_diff_squared +
-                             blue_diff_squared);
-        } else if constexpr (std::is_same_v<algorithm,
-                                            Distance_t::WEIGHTED_EUCLIDEAN>) {
-            return 1.f;
-        } else if constexpr (std::is_same_v<algorithm, Distance_t::DELTA_E>) {
+        if constexpr (algorithm == Distance_t::EUCLIDEAN) {
+            auto delta_R2 = (lhs.red.get() - rhs.red.get()) *
+                            (lhs.red.get() - rhs.red.get());
+            auto delta_G2 = (lhs.green.get() - rhs.green.get()) *
+                            (lhs.green.get() - rhs.green.get());
+            auto delta_B2 = (lhs.blue.get() - rhs.blue.get()) *
+                            (lhs.blue.get() - rhs.blue.get());
+            return std::sqrt(delta_R2 + delta_G2 + delta_B2);
+        } else if constexpr (algorithm == Distance_t::WEIGHTED_EUCLIDEAN) {
+            auto R_bar = (lhs.red.get() + rhs.red.get()) / 2;
+            auto delta_R2 = (lhs.red.get() - rhs.red.get()) *
+                            (lhs.red.get() - rhs.red.get());
+            auto delta_G2 = (lhs.green.get() - rhs.green.get()) *
+                            (lhs.green.get() - rhs.green.get());
+            auto delta_B2 = (lhs.blue.get() - rhs.blue.get()) *
+                            (lhs.blue.get() - rhs.blue.get());
+            if (R_bar < 128) {
+                return std::sqrt(2 * delta_R2 + 4 * delta_G2 + 3 * delta_B2);
+            } else {
+                return std::sqrt(3 * delta_R2 + 4 * delta_G2 + 2 * delta_B2);
+            }
+        } else if constexpr (algorithm == Distance_t::DELTA_E) {
             return 2.f;
         }
+        unreachable();  // reaching this state is UB
+        return 0.;
     }
 };
 
-}  // end of namespace Color
-}  // end of namespace ClearPNG
+}  // end of namespace ClearPNG::Color

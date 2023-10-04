@@ -1,8 +1,6 @@
 #include <ClearPNG/color.h>
 
-namespace ClearPNG {
-
-namespace Color {
+namespace ClearPNG::Color {
 
 RGBPixel RGBMultiply(RGBPixel const& lhs, RGBPixel const& rhs)
 {
@@ -10,9 +8,9 @@ RGBPixel RGBMultiply(RGBPixel const& lhs, RGBPixel const& rhs)
     int g = lhs.green.get() * rhs.green.get();
     int b = lhs.blue.get() * rhs.blue.get();
 
-    return RGBPixel(Red{static_cast<uint8_t>(r / 255)},
-                    Green{static_cast<uint8_t>(g / 255)},
-                    Blue{static_cast<uint8_t>(b / 255)});
+    return {Red{static_cast<uint8_t>(r / ColorValue<uint8_t>::mask)},
+            Green{static_cast<uint8_t>(g / ColorValue<uint8_t>::mask)},
+            Blue{static_cast<uint8_t>(b / ColorValue<uint8_t>::mask)}};
 }
 
 RGBPixel operator*(RGBPixel const& lhs, RGBPixel const& rhs)
@@ -32,14 +30,19 @@ RGBPixel& RGBPixel::operator*=(RGBPixel const& other)
 
 RGBPixel RGBScreen(RGBPixel const& lhs, RGBPixel const& rhs)
 {
-    int r = (255 - lhs.red.get()) * (255 - rhs.red.get());
-    int g = (255 - lhs.green.get()) * (255 - rhs.green.get());
-    int b = (255 - lhs.blue.get()) * (255 - rhs.blue.get());
+    int r = (ColorValue<uint8_t>::mask - lhs.red.get()) *
+            (ColorValue<uint8_t>::mask - rhs.red.get());
+    int g = (ColorValue<uint8_t>::mask - lhs.green.get()) *
+            (ColorValue<uint8_t>::mask - rhs.green.get());
+    int b = (ColorValue<uint8_t>::mask - lhs.blue.get()) *
+            (ColorValue<uint8_t>::mask - rhs.blue.get());
 
-    return RGBPixel(Red{static_cast<uint8_t>(255 - r / 255)},
-                    Green{static_cast<uint8_t>(255 - g / 255)},
-                    Blue{static_cast<uint8_t>(255 - b / 255)});
+    return {Red{static_cast<uint8_t>(ColorValue<uint8_t>::mask -
+                                     r / ColorValue<uint8_t>::mask)},
+            Green{static_cast<uint8_t>(ColorValue<uint8_t>::mask -
+                                       g / ColorValue<uint8_t>::mask)},
+            Blue{static_cast<uint8_t>(ColorValue<uint8_t>::mask -
+                                      b / ColorValue<uint8_t>::mask)}};
 }
 
-}  // end of namespace Color
-}  // end of namespace ClearPNG
+}  // end of namespace ClearPNG::Color

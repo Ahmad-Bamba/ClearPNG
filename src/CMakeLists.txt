@@ -87,5 +87,5 @@ if(WITH_CLANG_FORMAT)
 endif()
 
 if(WITH_CLANG_TIDY)
-    AddClangTidy(ClearPNG)
+    AddClangTidy(sources_obj)
 endif()
