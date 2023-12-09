@@ -28,6 +28,13 @@ RGBPixel& RGBPixel::operator*=(RGBPixel const& other)
     return *this;
 }
 
+float operator-(RGBPixel const& lhs, RGBPixel const& rhs)
+{
+    // default distance implementation
+    RGBDistance<Distance_t::EUCLIDEAN> distance_impl;
+    return distance(distance_impl, lhs, rhs);
+}
+
 RGBPixel RGBScreen(RGBPixel const& lhs, RGBPixel const& rhs)
 {
     int r = (ColorValue<uint8_t>::mask - lhs.red.get()) *
