@@ -114,47 +114,61 @@ public:
     }
 };
 
-class Red8;
-class Green8;
-class Blue8;
+template <typename S>
+    requires(ClearPNG::Concepts::CIntegral<S>)
+class UnsizedRed;
 
-class Red8 : public ColorValue<uint8_t> {
+template <typename S>
+    requires(ClearPNG::Concepts::CIntegral<S>)
+class UnsizedGreen;
+
+template <typename S>
+    requires(ClearPNG::Concepts::CIntegral<S>)
+class UnsizedBlue;
+
+template <typename Size>
+    requires(ClearPNG::Concepts::CIntegral<Size>)
+class UnsizedRed : public ColorValue<Size> {
 public:
-    using ColorValue::ColorValue;
+    using ColorValue<Size>::ColorValue;
 
-    constexpr bool operator==(Red8 const& other) const
+    constexpr bool operator==(UnsizedRed const& other) const
     {
-        return value == other.unwrap();
+        return this->value == other.unwrap();
     }
 
-    constexpr bool operator==(Green8 const&) const { return false; }
-    constexpr bool operator==(Blue8 const&) const { return false; }
+    constexpr bool operator==(UnsizedGreen<Size> const&) const { return false; }
+    constexpr bool operator==(UnsizedBlue<Size> const&) const { return false; }
 };
 
-class Green8 : public ColorValue<uint8_t> {
+template <typename Size>
+    requires(ClearPNG::Concepts::CIntegral<Size>)
+class UnsizedGreen : public ColorValue<Size> {
 public:
-    using ColorValue::ColorValue;
+    using ColorValue<Size>::ColorValue;
 
-    constexpr bool operator==(Green8 const& other) const
+    constexpr bool operator==(UnsizedGreen const& other) const
     {
-        return value == other.unwrap();
+        return this->value == other.unwrap();
     }
 
-    constexpr bool operator==(Red8 const&) const { return false; }
-    constexpr bool operator==(Blue8 const&) const { return false; }
+    constexpr bool operator==(UnsizedRed<Size> const&) const { return false; }
+    constexpr bool operator==(UnsizedBlue<Size> const&) const { return false; }
 };
 
-class Blue8 : public ColorValue<uint8_t> {
+template <typename Size>
+    requires(ClearPNG::Concepts::CIntegral<Size>)
+class UnsizedBlue : public ColorValue<Size> {
 public:
-    using ColorValue::ColorValue;
+    using ColorValue<Size>::ColorValue;
 
-    constexpr bool operator==(Blue8 const& other) const
+    constexpr bool operator==(UnsizedBlue const& other) const
     {
-        return value == other.unwrap();
+        return this->value == other.unwrap();
     }
 
-    constexpr bool operator==(Green8 const&) const { return false; }
-    constexpr bool operator==(Red8 const&) const { return false; }
+    constexpr bool operator==(UnsizedGreen<Size> const&) const { return false; }
+    constexpr bool operator==(UnsizedRed<Size> const&) const { return false; }
 };
 
 template <typename P, typename RedType, typename GreenType, typename BlueType>
@@ -164,17 +178,17 @@ template <typename P, typename RedType, typename GreenType, typename BlueType>
              ClearPNG::Concepts::CIntegralContainer<BlueType>)
 constexpr P AddPixels(P const& lhs, P const& rhs)
 {
-    using IR = decltype(lhs.unwrapRed());
-    using IG = decltype(lhs.unwrapGreen());
-    using IB = decltype(lhs.unwrapBlue());
+    using IntRed = decltype(lhs.unwrapRed());
+    using IntGreen = decltype(lhs.unwrapGreen());
+    using IntBlue = decltype(lhs.unwrapBlue());
     uint64_t red_sum = lhs.unwrapRed() + rhs.unwrapRed();
     uint64_t green_sum = lhs.unwrapGreen() + rhs.unwrapGreen();
     uint64_t blue_sum = lhs.unwrapBlue() + rhs.unwrapBlue();
-    return {RedType{static_cast<IR>(
+    return {RedType{static_cast<IntRed>(
                 clamp(red_sum, {.lower = 0, .upper = RedType::mask()}))},
-            GreenType{static_cast<IG>(
+            GreenType{static_cast<IntGreen>(
                 clamp(green_sum, {.lower = 0, .upper = GreenType::mask()}))},
-            BlueType{static_cast<IB>(
+            BlueType{static_cast<IntBlue>(
                 clamp(blue_sum, {.lower = 0, .upper = BlueType::mask()}))}};
 }
 
@@ -185,15 +199,15 @@ template <typename P, typename RedType, typename GreenType, typename BlueType>
              ClearPNG::Concepts::CIntegralContainer<BlueType>)
 constexpr P MultiplyPixels(P const& lhs, P const& rhs)
 {
-    using IR = decltype(lhs.unwrapRed());
-    using IG = decltype(lhs.unwrapGreen());
-    using IB = decltype(lhs.unwrapBlue());
+    using IntRed = decltype(lhs.unwrapRed());
+    using IntGreen = decltype(lhs.unwrapGreen());
+    using IntBlue = decltype(lhs.unwrapBlue());
     uint64_t red_prod = lhs.unwrapRed() * rhs.unwrapRed();
     uint64_t green_prod = lhs.unwrapGreen() * rhs.unwrapGreen();
     uint64_t blue_prod = lhs.unwrapBlue() * rhs.unwrapBlue();
-    return {RedType{static_cast<IR>(red_prod / RedType::mask())},
-            GreenType{static_cast<IG>(green_prod / GreenType::mask())},
-            BlueType{static_cast<IB>(blue_prod / BlueType::mask())}};
+    return {RedType{static_cast<IntRed>(red_prod / RedType::mask())},
+            GreenType{static_cast<IntGreen>(green_prod / GreenType::mask())},
+            BlueType{static_cast<IntBlue>(blue_prod / BlueType::mask())}};
 }
 
 template <typename P, typename RedType, typename GreenType, typename BlueType>
@@ -210,11 +224,15 @@ constexpr P ScreenPixels(P const& lhs, P const& rhs)
     int64_t b = (BlueType::mask() - lhs.unwrapBlue()) *
                 (BlueType::mask() - rhs.unwrapBlue());
 
+    using IntRed = decltype(lhs.unwrapRed());
+    using IntGreen = decltype(lhs.unwrapGreen());
+    using IntBlue = decltype(lhs.unwrapBlue());
+
     return {
-        RedType{static_cast<uint8_t>(RedType::mask() - r / RedType::mask())},
+        RedType{static_cast<IntRed>(RedType::mask() - r / RedType::mask())},
         GreenType{
-            static_cast<uint8_t>(GreenType::mask() - g / RedType::mask())},
-        BlueType{static_cast<uint8_t>(BlueType::mask() - b / RedType::mask())}};
+            static_cast<IntGreen>(GreenType::mask() - g / RedType::mask())},
+        BlueType{static_cast<IntBlue>(BlueType::mask() - b / RedType::mask())}};
 }
 
 auto EuclideanPixelDistance =
@@ -282,24 +300,25 @@ struct UnsizedRGBPixel {
 
     constexpr UnsizedRGBPixel operator+(UnsizedRGBPixel const& other) const
     {
-        return AddPixels<UnsizedRGBPixel, Red8, Green8, Blue8>(*this, other);
+        return AddPixels<UnsizedRGBPixel, RedType, GreenType, BlueType>(*this,
+                                                                        other);
     }
 
     constexpr UnsizedRGBPixel& operator+=(UnsizedRGBPixel const& other)
     {
-        using IR = decltype(unwrapRed());
-        using IG = decltype(unwrapGreen());
-        using IB = decltype(unwrapBlue());
+        using IntRed = decltype(unwrapRed());
+        using IntGreen = decltype(unwrapGreen());
+        using IntBlue = decltype(unwrapBlue());
 
         uint64_t red_sum = unwrapRed() + other.unwrapRed();
         uint64_t green_sum = unwrapGreen() + other.unwrapGreen();
         uint64_t blue_sum = unwrapBlue() + other.unwrapBlue();
 
-        red = RedType{static_cast<IR>(
+        red = RedType{static_cast<IntRed>(
             clamp(red_sum, {.lower = 0, .upper = RedType::mask()}))};
-        green = GreenType{static_cast<IG>(
+        green = GreenType{static_cast<IntGreen>(
             clamp(green_sum, {.lower = 0, .upper = GreenType::mask()}))};
-        blue = BlueType{static_cast<IB>(
+        blue = BlueType{static_cast<IntBlue>(
             clamp(blue_sum, {.lower = 0, .upper = BlueType::mask()}))};
 
         return *this;
@@ -307,15 +326,15 @@ struct UnsizedRGBPixel {
 
     constexpr UnsizedRGBPixel operator*(UnsizedRGBPixel const& other) const
     {
-        return MultiplyPixels<UnsizedRGBPixel, Red8, Green8, Blue8>(*this,
-                                                                    other);
+        return MultiplyPixels<UnsizedRGBPixel, RedType, GreenType, BlueType>(
+            *this, other);
     }
 
     constexpr UnsizedRGBPixel& operator*=(UnsizedRGBPixel const& other)
     {
-        using IR = decltype(unwrapRed());
-        using IG = decltype(unwrapGreen());
-        using IB = decltype(unwrapBlue());
+        using IntRed = decltype(unwrapRed());
+        using IntGreen = decltype(unwrapGreen());
+        using IntBlue = decltype(unwrapBlue());
 
         uint64_t red_prod = unwrapRed() * other.unwrapRed() / RedType::mask();
         uint64_t green_prod =
@@ -323,11 +342,11 @@ struct UnsizedRGBPixel {
         uint64_t blue_prod =
             unwrapBlue() * other.unwrapBlue() / BlueType::mask();
 
-        red = RedType{static_cast<IR>(
+        red = RedType{static_cast<IntRed>(
             clamp(red_prod, {.lower = 0, .upper = RedType::mask()}))};
-        green = GreenType{static_cast<IG>(
+        green = GreenType{static_cast<IntGreen>(
             clamp(green_prod, {.lower = 0, .upper = GreenType::mask()}))};
-        blue = BlueType{static_cast<IB>(
+        blue = BlueType{static_cast<IntBlue>(
             clamp(blue_prod, {.lower = 0, .upper = BlueType::mask()}))};
 
         return *this;
@@ -339,15 +358,31 @@ struct UnsizedRGBPixel {
     }
 };
 
-// For most images, 8 bit color is the default
+// For most images, 8-bit color depth is the default
 
-using Red = Red8;
-using Green = Green8;
-using Blue = Blue8;
+using Red = UnsizedRed<uint8_t>;
+using Green = UnsizedGreen<uint8_t>;
+using Blue = UnsizedBlue<uint8_t>;
 using RGBPixel = UnsizedRGBPixel<Red, Green, Blue>;
 
-constexpr auto RGBMultiply = MultiplyPixels<RGBPixel, Red, Green, Blue>;
-constexpr auto RGBScreen = ScreenPixels<RGBPixel, Red, Green, Blue>;
+auto constexpr RGBMultiply = MultiplyPixels<RGBPixel, Red, Green, Blue>;
+auto constexpr RGBScreen = ScreenPixels<RGBPixel, Red, Green, Blue>;
+
+// Define types for 16-bit color depth too
+
+using Red16 = UnsizedRed<uint16_t>;
+using Green16 = UnsizedGreen<uint16_t>;
+using Blue16 = UnsizedBlue<uint16_t>;
+using RGBPixel16 = UnsizedRGBPixel<Red16, Green16, Blue16>;
+
+auto constexpr RGB16Multiply =
+    MultiplyPixels<RGBPixel16, Red16, Green16, Blue16>;
+auto constexpr RGB16Screen =
+    ScreenPixels<RGBPixel16, Red16, Green16, Blue16>;
+
+
+// TODO: Think about how to support 24-color images in a way that they play nice
+// with the above types.
 
 }  // namespace ClearPNG::Color
 
