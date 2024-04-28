@@ -1,322 +1,354 @@
-#pragma once
+#ifndef FILE_CLEARPNG_COLOR_H_ALREADY_INCLUDED
+#define FILE_CLEARPNG_COLOR_H_ALREADY_INCLUDED
 
+#include <cinttypes>
 #include <cmath>
-#include <cstdint>
+#include <type_traits>
 
 #include "util.h"
 
 namespace ClearPNG::Color {
 
-template <Numeric T>
-struct ColorValue {
-    inline T get() const { return value; }
+template <typename I>
+    requires(ClearPNG::Concepts::CIntegral<I>)
+class ColorValue {
+protected:
+    I value{};
+    static I constexpr _mask = ~0;
 
-    inline void set(T value) { this->value = value; }
+public:
+    constexpr ColorValue() = default;
+    constexpr explicit ColorValue(I _v) : value{_v} {}
+    constexpr ColorValue& operator=(I _v)
+    {
+        value = _v;
+        return *this;
+    }
 
-    static constexpr T mask = ~0;
+    constexpr void set(I i) { value = i; }
+    constexpr I unwrap() const { return value; }
 
-    protected:
-    T value;
+    constexpr bool operator==(ColorValue const& other) const
+    {
+        return value == other.unwrap();
+    }
+
+    constexpr ColorValue operator+(ColorValue const& other) const
+    {
+        uint64_t sum = value + other.unwrap();
+        I new_value = static_cast<I>(
+            clamp(sum, {.lower = 0, .upper = ColorValue<I>::_mask}));
+        return ColorValue{new_value};
+    }
+
+    constexpr ColorValue operator-(ColorValue const& other) const
+    {
+        int64_t difference = value - other.unwrap();
+        I new_value = static_cast<I>(
+            clamp(difference, {.lower = 0, .upper = ColorValue::_mask}));
+        return ColorValue{new_value};
+    }
+
+    constexpr ColorValue& operator+=(ColorValue const& other)
+    {
+        uint64_t sum = value + other.unwrap();
+        value = static_cast<I>(
+            clamp(sum, {.lower = 0, .upper = ColorValue::_mask}));
+        return *this;
+    }
+
+    constexpr ColorValue& operator-=(ColorValue const& other)
+    {
+        int64_t difference = value - other.unwrap();
+        value = static_cast<I>(
+            clamp(difference, {.lower = 0, .upper = ColorValue::_mask}));
+        return *this;
+    }
+
+    static constexpr I mask() { return _mask; }
 };
 
-struct Red;
-struct Green;
-struct Blue;
+template <typename F>
+    requires(ClearPNG::Concepts::CFloatingPoint<F>)
+class ColorFloatValue {
+protected:
+    F value{};
 
-struct Red : public ColorValue<uint8_t> {
-    explicit Red(uint8_t _r) noexcept { value = _r; }
-
-    friend inline bool operator==(Red const& lhs, Red const& rhs)
+public:
+    constexpr ColorFloatValue() = default;
+    constexpr explicit ColorFloatValue(F _v) : value{_v} {}
+    constexpr ColorFloatValue& operator=(F _v)
     {
-        return lhs.get() == rhs.get();
-    }
-
-    friend inline bool operator==(Red const&, Green const&) { return false; }
-
-    friend inline bool operator==(Red const&, Blue const&) { return false; }
-
-    friend inline Red operator+(Red const& lhs, Red const& rhs)
-    {
-        int sum = lhs.get() + rhs.get();
-        uint8_t new_value =
-            clamp(sum, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return Red{new_value};
-    }
-
-    friend inline Red operator-(Red const& lhs, Red const& rhs)
-    {
-        int difference = lhs.get() - rhs.get();
-        uint8_t new_value =
-            clamp(difference, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return Red{new_value};
-    }
-
-    inline Red& operator+=(Red const& other)
-    {
-        int sum = value + other.get();
-        value = clamp(sum, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
+        value = _v;
         return *this;
     }
 
-    inline Red& operator-=(Red const& other)
-    {
-        int difference = value - other.get();
-        value =
-            clamp(difference, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return *this;
-    }
-};
+    constexpr void set(F i) { value = i; }
+    constexpr F unwrap() const { return value; }
 
-struct Green : ColorValue<uint8_t> {
-    explicit Green(uint8_t _g) noexcept { value = _g; }
-
-    friend inline bool operator==(Green const& lhs, Green const& rhs)
+    constexpr bool operator==(ColorFloatValue const& other) const
     {
-        return lhs.get() == rhs.get();
+        return value == other.unwrap();
     }
 
-    friend inline bool operator==(Green const&, Red const&) { return false; }
-
-    friend inline bool operator==(Green const&, Blue const&) { return false; }
-
-    friend inline Green operator+(Green const& lhs, Green const& rhs)
+    constexpr ColorFloatValue operator+(ColorFloatValue const& other) const
     {
-        int sum = lhs.get() + rhs.get();
-        uint8_t new_value =
-            clamp(sum, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return Green{new_value};
+        return ColorFloatValue{value + other.unwrap()};
     }
 
-    friend inline Green operator-(Green const& lhs, Green const& rhs)
+    constexpr ColorFloatValue operator-(ColorFloatValue const& other) const
     {
-        int difference = lhs.get() - rhs.get();
-        uint8_t new_value =
-            clamp(difference, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return Green{new_value};
+        return ColorFloatValue{value - other.unwrap()};
     }
 
-    inline Green& operator+=(Green const& other)
+    constexpr ColorFloatValue& operator+=(ColorFloatValue const& other)
     {
-        int sum = value + other.get();
-        value = clamp(sum, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
+        value += other.unwrap();
         return *this;
     }
 
-    inline Green& operator-=(Green const& other)
+    constexpr ColorFloatValue& operator-=(ColorFloatValue const& other)
     {
-        int difference = value - other.get();
-        value =
-            clamp(difference, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return *this;
-    }
-};
-
-struct Blue : ColorValue<uint8_t> {
-    explicit Blue(uint8_t _b) noexcept { value = _b; }
-
-    friend inline bool operator==(Blue const& lhs, Blue const& rhs)
-    {
-        return lhs.get() == rhs.get();
-    }
-
-    friend inline bool operator==(Blue const&, Red const&) { return false; }
-
-    friend inline bool operator==(Blue const&, Green const&) { return false; }
-
-    friend inline Blue operator+(Blue const& lhs, Blue const& rhs)
-    {
-        int sum = lhs.get() + rhs.get();
-        uint8_t new_value =
-            clamp(sum, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return Blue{new_value};
-    }
-
-    friend inline Blue operator-(Blue const& lhs, Blue const& rhs)
-    {
-        int difference = lhs.get() - rhs.get();
-        uint8_t new_value =
-            clamp(difference, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return Blue{new_value};
-    }
-
-    inline Blue& operator+=(Blue const& other)
-    {
-        int sum = value + other.get();
-        value = clamp(sum, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
-        return *this;
-    }
-
-    inline Blue& operator-=(Blue const& other)
-    {
-        int difference = value - other.get();
-        value =
-            clamp(difference, {.lower = 0, .upper = ColorValue<uint8_t>::mask});
+        value -= other.unwrap();
         return *this;
     }
 };
 
-struct RGBPixel {
-    Red red;
-    Green green;
-    Blue blue;
+class Red8;
+class Green8;
+class Blue8;
 
-    RGBPixel(Red _r, Green _g, Blue _b) noexcept : red{_r}, green{_g}, blue{_b}
+class Red8 : public ColorValue<uint8_t> {
+public:
+    using ColorValue::ColorValue;
+
+    constexpr bool operator==(Red8 const& other) const
     {
+        return value == other.unwrap();
     }
 
-    inline bool operator==(RGBPixel const& other) const
-    {
-        return red == other.red && green == other.green && blue == other.blue;
-    }
-
-    inline RGBPixel& operator+=(RGBPixel const& other)
-    {
-        red += other.red;
-        green += other.green;
-        blue += other.blue;
-
-        return *this;
-    }
-
-    friend inline RGBPixel operator+(RGBPixel const& lhs, RGBPixel const& rhs)
-    {
-        return RGBPixel(lhs.red + rhs.red, lhs.green + rhs.green,
-                        lhs.blue + rhs.blue);
-    }
-
-    friend RGBPixel operator*(RGBPixel const&, RGBPixel const&);
-    RGBPixel& operator*=(RGBPixel const&);
-
-    // A default distance operator
-    friend float operator-(RGBPixel const&, RGBPixel const&);
+    constexpr bool operator==(Green8 const&) const { return false; }
+    constexpr bool operator==(Blue8 const&) const { return false; }
 };
 
-// Blend mode functions
-RGBPixel RGBMultiply(RGBPixel const&, RGBPixel const&);
-RGBPixel RGBScreen(RGBPixel const&, RGBPixel const&);
+class Green8 : public ColorValue<uint8_t> {
+public:
+    using ColorValue::ColorValue;
 
-enum class Distance_t { EUCLIDEAN, WEIGHTED_EUCLIDEAN, CIELAB };
-
-// There are potentially many different pixel type and algorithm combinations.
-// However, we can imagine calculating pixel distances being in the hot path.
-// Therefore, we avoid dynamic dispatch and do compile-time polymorphism with
-// CRTP.
-//
-// TODO: PixelT should be some kind of concept
-template <typename Derived, typename PixelT>
-struct CalculateDistanceImpl {
-    float operator()(PixelT const& lhs, PixelT const& rhs)
+    constexpr bool operator==(Green8 const& other) const
     {
-        return (*static_cast<Derived*>(this))(lhs, rhs);
+        return value == other.unwrap();
     }
+
+    constexpr bool operator==(Red8 const&) const { return false; }
+    constexpr bool operator==(Blue8 const&) const { return false; }
 };
 
-template <Distance_t algorithm>
-struct RGBDistance
-    : public CalculateDistanceImpl<RGBDistance<algorithm>, RGBPixel> {
-    float operator()(RGBPixel const& lhs, RGBPixel const& rhs)
+class Blue8 : public ColorValue<uint8_t> {
+public:
+    using ColorValue::ColorValue;
+
+    constexpr bool operator==(Blue8 const& other) const
     {
-        if constexpr (algorithm == Distance_t::EUCLIDEAN) {
-            auto delta_R2 = (lhs.red.get() - rhs.red.get()) *
-                            (lhs.red.get() - rhs.red.get());
-            auto delta_G2 = (lhs.green.get() - rhs.green.get()) *
-                            (lhs.green.get() - rhs.green.get());
-            auto delta_B2 = (lhs.blue.get() - rhs.blue.get()) *
-                            (lhs.blue.get() - rhs.blue.get());
-            return std::sqrt(delta_R2 + delta_G2 + delta_B2);
-        } else if constexpr (algorithm == Distance_t::WEIGHTED_EUCLIDEAN) {
-            auto R_bar = (lhs.red.get() + rhs.red.get()) / 2;
-            auto delta_R2 = (lhs.red.get() - rhs.red.get()) *
-                            (lhs.red.get() - rhs.red.get());
-            auto delta_G2 = (lhs.green.get() - rhs.green.get()) *
-                            (lhs.green.get() - rhs.green.get());
-            auto delta_B2 = (lhs.blue.get() - rhs.blue.get()) *
-                            (lhs.blue.get() - rhs.blue.get());
-            if (R_bar < 128) {
-                return std::sqrt(2 * delta_R2 + 4 * delta_G2 + 3 * delta_B2);
-            } else {
-                return std::sqrt(3 * delta_R2 + 4 * delta_G2 + 2 * delta_B2);
-            }
-        } else if constexpr (algorithm == Distance_t::CIELAB) {
-            // convert RGB to CIEXYZ
-            struct XYZ {
-                float X, Y, Z;
-            };
-            auto rgb_xyz = [](RGBPixel const& p) -> XYZ {
-                float _r = p.red.get() / p.red.mask;
-                float _g = p.green.get() / p.green.mask;
-                float _b = p.blue.get() / p.blue.mask;
-
-                _r = _r > 0.04045 ? std::pow((_r + 0.055) / 1.055, 2.4)
-                                  : _r / 12.92;
-                _g = _g > 0.04045 ? std::pow((_g + 0.055) / 1.055, 2.4)
-                                  : _g / 12.92;
-                _b = _b > 0.04045 ? std::pow((_b + 0.055) / 1.055, 2.4)
-                                  : _b / 12.92;
-
-                float X = _r * 0.4124 + _g * 0.3576 + _b * 0.1805;
-                float Y = _r * 0.2126 * _g * 0.7152 + _b * 0.0722;
-                float Z = _r * 0.0193 + _g * 0.1192 + _b * 0.9505;
-
-                X *= 100;
-                Y *= 100;
-                Z *= 100;
-
-                return XYZ{X, Y, Z};
-            };
-
-            XYZ lhs_xyz = rgb_xyz(lhs);
-            XYZ rhs_xyz = rgb_xyz(rhs);
-
-            // convert CIEXYZ to CIELAB
-            struct LABstar {
-                float CIE_Lstar, CIE_astar, CIE_bstar;
-            };
-            auto xyz_lab = [](XYZ const& p) -> LABstar {
-                // based on D65 reference white, daylight
-                float constexpr refX = 94.811;
-                float constexpr refY = 100.;
-                float constexpr refZ = 107.304;
-
-                float _x = p.X / refX;
-                float _y = p.Y / refY;
-                float _z = p.Z / refZ;
-
-                _x = _x > 0.008856 ? std::pow(_x, 1.f / 3)
-                                   : (7.787 * _x) + (16.f / 116);
-                _y = _y > 0.008856 ? std::pow(_y, 1.f / 3)
-                                   : (7.787 * _y) + (16.f / 116);
-                _z = _z > 0.008856 ? std::pow(_z, 1.f / 3)
-                                   : (7.787 * _z) + (16.f / 116);
-
-                float L = (116 * _y) - 16;
-                // TODO: Consider if clamping to -128 to 127 is better here
-                float a = 500 * (_x - _y);
-                float b = 200 * (_y - _z);
-
-                return LABstar{L, a, b};
-            };
-            LABstar lhs_lab = xyz_lab(lhs_lab);
-            LABstar rhs_lab = xyz_lab(rhs_xyz);
-
-            auto deltaLstar = lhs_lab.CIE_Lstar - rhs_lab.CIE_Lstar;
-            auto deltaastar = lhs_lab.CIE_astar - rhs_lab.CIE_astar;
-            auto deltabstar = lhs_lab.CIE_bstar - rhs_lab.CIE_bstar;
-
-            // calculate distance
-            return std::sqrt(deltaLstar * deltaLstar + deltaastar * deltaastar +
-                             deltabstar * deltabstar);
-        }
-        unreachable();  // reaching this state is UB
-        return 0.;
+        return value == other.unwrap();
     }
+
+    constexpr bool operator==(Green8 const&) const { return false; }
+    constexpr bool operator==(Red8 const&) const { return false; }
 };
 
-template <typename T, typename PixelT>
-float distance(CalculateDistanceImpl<T, PixelT> impl, PixelT const& lhs,
-               PixelT const& rhs)
+template <typename P, typename RedType, typename GreenType, typename BlueType>
+    requires(ClearPNG::Concepts::CPixel<P>,
+             ClearPNG::Concepts::CIntegralContainer<RedType>,
+             ClearPNG::Concepts::CIntegralContainer<GreenType>,
+             ClearPNG::Concepts::CIntegralContainer<BlueType>)
+constexpr P AddPixels(P const& lhs, P const& rhs)
 {
-    return impl(lhs, rhs);
+    using IR = decltype(lhs.unwrapRed());
+    using IG = decltype(lhs.unwrapGreen());
+    using IB = decltype(lhs.unwrapBlue());
+    uint64_t red_sum = lhs.unwrapRed() + rhs.unwrapRed();
+    uint64_t green_sum = lhs.unwrapGreen() + rhs.unwrapGreen();
+    uint64_t blue_sum = lhs.unwrapBlue() + rhs.unwrapBlue();
+    return {RedType{static_cast<IR>(
+                clamp(red_sum, {.lower = 0, .upper = RedType::mask()}))},
+            GreenType{static_cast<IG>(
+                clamp(green_sum, {.lower = 0, .upper = GreenType::mask()}))},
+            BlueType{static_cast<IB>(
+                clamp(blue_sum, {.lower = 0, .upper = BlueType::mask()}))}};
 }
 
-}  // end of namespace ClearPNG::Color
+template <typename P, typename RedType, typename GreenType, typename BlueType>
+    requires(ClearPNG::Concepts::CPixel<P>,
+             ClearPNG::Concepts::CIntegralContainer<RedType>,
+             ClearPNG::Concepts::CIntegralContainer<GreenType>,
+             ClearPNG::Concepts::CIntegralContainer<BlueType>)
+constexpr P MultiplyPixels(P const& lhs, P const& rhs)
+{
+    using IR = decltype(lhs.unwrapRed());
+    using IG = decltype(lhs.unwrapGreen());
+    using IB = decltype(lhs.unwrapBlue());
+    uint64_t red_prod = lhs.unwrapRed() * rhs.unwrapRed();
+    uint64_t green_prod = lhs.unwrapGreen() * rhs.unwrapGreen();
+    uint64_t blue_prod = lhs.unwrapBlue() * rhs.unwrapBlue();
+    return {RedType{static_cast<IR>(red_prod / RedType::mask())},
+            GreenType{static_cast<IG>(green_prod / GreenType::mask())},
+            BlueType{static_cast<IB>(blue_prod / BlueType::mask())}};
+}
+
+template <typename P, typename RedType, typename GreenType, typename BlueType>
+    requires(ClearPNG::Concepts::CPixel<P>,
+             ClearPNG::Concepts::CIntegralContainer<RedType>,
+             ClearPNG::Concepts::CIntegralContainer<GreenType>,
+             ClearPNG::Concepts::CIntegralContainer<BlueType>)
+constexpr P ScreenPixels(P const& lhs, P const& rhs)
+{
+    int64_t r = (RedType::mask() - lhs.unwrapRed()) *
+                (RedType::mask() - rhs.unwrapRed());
+    int64_t g = (GreenType::mask() - lhs.unwrapGreen()) *
+                (GreenType::mask() - rhs.unwrapGreen());
+    int64_t b = (BlueType::mask() - lhs.unwrapBlue()) *
+                (BlueType::mask() - rhs.unwrapBlue());
+
+    return {
+        RedType{static_cast<uint8_t>(RedType::mask() - r / RedType::mask())},
+        GreenType{
+            static_cast<uint8_t>(GreenType::mask() - g / RedType::mask())},
+        BlueType{static_cast<uint8_t>(BlueType::mask() - b / RedType::mask())}};
+}
+
+auto EuclideanPixelDistance =
+    [](ClearPNG::Concepts::CPixel auto const& lhs,
+       ClearPNG::Concepts::CPixel auto const& rhs) constexpr -> float {
+    auto delta_R2 = (lhs.unwrapRed() - rhs.unwrapRed()) *
+                    (lhs.unwrapRed() - rhs.unwrapRed());
+    auto delta_G2 = (lhs.unwrapGreen() - rhs.unwrapGreen()) *
+                    (lhs.unwrapGreen() - rhs.unwrapGreen());
+    auto delta_B2 = (lhs.unwrapBlue() - rhs.unwrapBlue()) *
+                    (lhs.unwrapBlue() - rhs.unwrapBlue());
+    return std::sqrt(delta_R2 + delta_G2 + delta_B2);
+};
+
+auto WeightedEuclideanPixelDistance =
+    [](ClearPNG::Concepts::CPixel auto const& lhs,
+       ClearPNG::Concepts::CPixel auto const& rhs) constexpr -> float {
+    auto R_bar = (lhs.unwrapRed() + rhs.unwrapRed()) / 2;
+    auto delta_R2 = (lhs.unwrapRed() - rhs.unwrapRed()) *
+                    (lhs.unwrapRed() - rhs.unwrapRed());
+    auto delta_G2 = (lhs.unwrapGreen() - rhs.unwrapGreen()) *
+                    (lhs.unwrapGreen() - rhs.unwrapGreen());
+    auto delta_B2 = (lhs.unwrapBlue() - rhs.unwrapBlue()) *
+                    (lhs.unwrapBlue() - rhs.unwrapBlue());
+    if (R_bar < 128) {
+        return std::sqrt(2 * delta_R2 + 4 * delta_G2 + 3 * delta_B2);
+    }
+    else {
+        return std::sqrt(3 * delta_R2 + 4 * delta_G2 + 2 * delta_B2);
+    }
+};
+
+template <typename P>
+    requires(ClearPNG::Concepts::CPixel<P>)
+struct CIELABImpl {
+    struct CIELAB {
+        float Lstar;
+        float astar;
+        float bstar;
+    };
+    float operator-(P const&) { return 0.; }
+};
+
+template <typename RedType, typename GreenType, typename BlueType>
+    requires(ClearPNG::Concepts::CIntegralContainer<RedType>,
+             ClearPNG::Concepts::CIntegralContainer<GreenType>,
+             ClearPNG::Concepts::CIntegralContainer<BlueType>)
+struct UnsizedRGBPixel {
+    RedType red;
+    GreenType green;
+    BlueType blue;
+
+    constexpr bool operator==(UnsizedRGBPixel const& other) const
+    {
+        return red.unwrap() == other.unwrapRed() &&
+               blue.unwrap() == other.unwrapBlue() &&
+               green.unwrap() == other.unwrapGreen();
+    }
+
+    constexpr auto unwrapRed() const { return red.unwrap(); }
+
+    constexpr auto unwrapGreen() const { return green.unwrap(); }
+
+    constexpr auto unwrapBlue() const { return blue.unwrap(); }
+
+    constexpr UnsizedRGBPixel operator+(UnsizedRGBPixel const& other) const
+    {
+        return AddPixels<UnsizedRGBPixel, Red8, Green8, Blue8>(*this, other);
+    }
+
+    constexpr UnsizedRGBPixel& operator+=(UnsizedRGBPixel const& other)
+    {
+        using IR = decltype(unwrapRed());
+        using IG = decltype(unwrapGreen());
+        using IB = decltype(unwrapBlue());
+
+        uint64_t red_sum = unwrapRed() + other.unwrapRed();
+        uint64_t green_sum = unwrapGreen() + other.unwrapGreen();
+        uint64_t blue_sum = unwrapBlue() + other.unwrapBlue();
+
+        red = RedType{static_cast<IR>(
+            clamp(red_sum, {.lower = 0, .upper = RedType::mask()}))};
+        green = GreenType{static_cast<IG>(
+            clamp(green_sum, {.lower = 0, .upper = GreenType::mask()}))};
+        blue = BlueType{static_cast<IB>(
+            clamp(blue_sum, {.lower = 0, .upper = BlueType::mask()}))};
+
+        return *this;
+    }
+
+    constexpr UnsizedRGBPixel operator*(UnsizedRGBPixel const& other) const
+    {
+        return MultiplyPixels<UnsizedRGBPixel, Red8, Green8, Blue8>(*this,
+                                                                    other);
+    }
+
+    constexpr UnsizedRGBPixel& operator*=(UnsizedRGBPixel const& other)
+    {
+        using IR = decltype(unwrapRed());
+        using IG = decltype(unwrapGreen());
+        using IB = decltype(unwrapBlue());
+
+        uint64_t red_prod = unwrapRed() * other.unwrapRed() / RedType::mask();
+        uint64_t green_prod =
+            unwrapGreen() * other.unwrapGreen() / GreenType::mask();
+        uint64_t blue_prod =
+            unwrapBlue() * other.unwrapBlue() / BlueType::mask();
+
+        red = RedType{static_cast<IR>(
+            clamp(red_prod, {.lower = 0, .upper = RedType::mask()}))};
+        green = GreenType{static_cast<IG>(
+            clamp(green_prod, {.lower = 0, .upper = GreenType::mask()}))};
+        blue = BlueType{static_cast<IB>(
+            clamp(blue_prod, {.lower = 0, .upper = BlueType::mask()}))};
+
+        return *this;
+    }
+
+    constexpr float operator-(UnsizedRGBPixel const& other) const
+    {
+        return EuclideanPixelDistance(*this, other);
+    }
+};
+
+// For most images, 8 bit color is the default
+
+using Red = Red8;
+using Green = Green8;
+using Blue = Blue8;
+using RGBPixel = UnsizedRGBPixel<Red, Green, Blue>;
+
+constexpr auto RGBMultiply = MultiplyPixels<RGBPixel, Red, Green, Blue>;
+constexpr auto RGBScreen = ScreenPixels<RGBPixel, Red, Green, Blue>;
+
+}  // namespace ClearPNG::Color
+
+#endif

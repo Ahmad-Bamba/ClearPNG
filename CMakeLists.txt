@@ -23,11 +23,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Default options
-option(WITH_CLANG_TIDY "Should clang-tidy checks be enabled?" OFF)
+option(WITH_CLANG_TIDY "Should clang-tidy checks be enabled?" ON)
 option(TIDY_EXTRA "If we are using clang-tidy, should extra static analysis checks be performed?" OFF)
-option(WITH_CLANG_FORMAT "Should the code be auto-formated with clang-format?" OFF)
+option(WITH_CLANG_FORMAT "Should the code be auto-formated with clang-format?" ON)
+option(WITH_CPPCHECK "Should cppcheck checks be enabled?" OFF)
 option(BUILD_STATIC_ARCHIVE "Should the static archive of ClearPNG be built and installed over the dynamic library?" OFF)
-option(BUILD_DOCS "Should the documentation be built?" ON)
+option(BUILD_DOCS "Should the documentation be built?" OFF)
 option(PACKAGE_TESTS "Build the tests" ON)
 
 # Clang-Format and Clang-Tidy
@@ -36,6 +37,9 @@ if (WITH_CLANG_FORMAT)
 endif()
 if(WITH_CLANG_TIDY)
     include(Tidy)
+endif()
+if (WITH_CPPCHECK)
+    include(CppCheck)
 endif()
 
 # OpenCL used for SIMD shader support. SIMD shaders will not be

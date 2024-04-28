@@ -1,8 +1,8 @@
-#pragma once
+#ifndef FILE_CLEARPNG_IMAGE_H_ALREADY_INCLUDED
+#define FILE_CLEARPNG_IMAGE_H_ALREADY_INCLUDED
 
-namespace ClearPng {
+namespace ClearPng::Image {
 
-namespace Image {
+}  // namespace ClearPng::Image
 
-}  // namespace Image
-}  // namespace ClearPng
+#endif

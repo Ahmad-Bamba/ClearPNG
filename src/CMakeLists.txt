@@ -1,7 +1,6 @@
 set(OUTNAME "clearpng")
 
 set(LIBRARY_SOURCES
-    "color.cpp"
     "image.cpp"
 )
 
@@ -20,9 +19,9 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     if(NOT MVSC)
-        set(OPTIMIZE_LEVEL "-O0" "-g")
+        set(OPTIMIZE_LEVEL "-O0" "-g" "-fno-omit-frame-pointer")
     else()
-        set(OPTIMIZE_LEVEL "/O0" "/Od")
+        set(OPTIMIZE_LEVEL "/Od")
     endif()
 else()
     if(NOT MVSC)
@@ -32,30 +31,15 @@ else()
     endif()
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    if (NOT MSVC)
-        set(SANITIZER_FLAGS
-            "-fsanitize=address"
-            "-fsanitize=undefined"
-            "-fsanitize=leak"
-        )
-    else()
-        set(SANITIZER_FLAGS
-            "/fsanitize=address"
-        )
-    endif()
-endif()
-
-
 add_library(sources_obj OBJECT ${LIBRARY_SOURCES})
 target_include_directories(sources_obj
     PRIVATE ${PROJECT_SOURCE_DIR}/include
 )
-target_compile_options(sources_obj PUBLIC ${WARNING_FLAGS} ${OPTIMIZE_LEVEL} ${SANITIZER_FLAGS})
+target_compile_options(sources_obj PUBLIC ${WARNING_FLAGS} ${OPTIMIZE_LEVEL})
 set_target_properties(sources_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_STATIC_ARCHIVE)
-    add_library(ClearPNG_
+    add_library(ClearPNG
         STATIC
         $<TARGET_OBJECTS:sources_obj>
     )
@@ -80,7 +64,7 @@ set_target_properties(ClearPNG PROPERTIES
 )
 
 if(WITH_CLANG_FORMAT)
-    add_custom_target(include-format COMMAND echo "Format headers.")
+    add_custom_target(include-format COMMAND echo "Format ClearPNG headers...")
     FormatDir(include-format ${PROJECT_SOURCE_DIR}/include)
     add_dependencies(ClearPNG include-format)
     FormatDir(ClearPNG ${CMAKE_CURRENT_SOURCE_DIR})
@@ -88,4 +72,8 @@ endif()
 
 if(WITH_CLANG_TIDY)
     AddClangTidy(sources_obj)
+endif()
+
+if (WITH_CPPCHECK)
+    AddCppCheck(sources_obj)
 endif()

@@ -2,12 +2,11 @@ BasedOnStyle: Google
 IndentWidth: 4
 UseTab: Never
 ColumnLimit: 80
+BreakBeforeBraces: Stroustrup
 ---
 Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
-AccessModifierOffset: 0
-
-BreakBeforeBraces: Custom
-BraceWrapping:
-    AfterFunction: true
+AccessModifierOffset: -4
+IndentAccessModifiers: false
+RequiresClausePosition: OwnLine
