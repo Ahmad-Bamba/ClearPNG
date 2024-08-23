@@ -1,9 +1,5 @@
 set(OUTNAME "clearpng")
 
-set(LIBRARY_SOURCES
-    "image.cpp"
-)
-
 if (NOT MSVC)
     set(WARNING_FLAGS
         "-Wall"
@@ -31,7 +27,7 @@ else()
     endif()
 endif()
 
-add_library(sources_obj OBJECT ${LIBRARY_SOURCES})
+add_library(sources_obj OBJECT png.cpp)
 target_include_directories(sources_obj
     PRIVATE ${PROJECT_SOURCE_DIR}/include
 )

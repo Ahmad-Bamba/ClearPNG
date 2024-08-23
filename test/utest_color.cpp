@@ -1,8 +1,8 @@
-#include "ClearPNG/color.h"
-#include "ClearPNG/util.h"
-
 #include <gtest/gtest.h>
+
 #include <cstdint>
+
+#include "ClearPNG/png.hpp"
 
 using namespace ClearPNG::Color;
 
@@ -13,8 +13,8 @@ TEST(TestColor, RGBColorArithmetic)
     static_assert(Red{ 1 } == Red{ 1 });
     static_assert(Green{ 1 } == Green{ 1 });
     static_assert(Blue{ 1 } == Blue{ 1 });
-    static_assert(not (Red{ 1 } == Green{ 1 }));
-    static_assert(not (Green{ 1 } == Blue{ 1 }));
+    static_assert(not(Red{ 1 } == Green{ 1 }));
+    static_assert(not(Green{ 1 } == Blue{ 1 }));
 
     // make sure red green and blue satisfy correct concept
     using ClearPNG::Concepts::CIntegralContainer;
@@ -23,36 +23,36 @@ TEST(TestColor, RGBColorArithmetic)
     static_assert(CIntegralContainer<Blue>);
 
     // Create RGB values
-    Red red { 100 };
-    Green green { 100 };
-    Blue blue { 100 };
+    Red red{ 100 };
+    Green green{ 100 };
+    Blue blue{ 100 };
 
     // Test that addition for RGB colors is clamped at 255
-    ASSERT_EQ(red + Red{220}, Red{255});
-    ASSERT_EQ(green + Green{220}, Green{255});
-    ASSERT_EQ(blue + Blue{220}, Blue{255});
+    ASSERT_EQ(red + Red{ 220 }, Red{ 255 });
+    ASSERT_EQ(green + Green{ 220 }, Green{ 255 });
+    ASSERT_EQ(blue + Blue{ 220 }, Blue{ 255 });
 
     // Test that subtraction for colors is clamped at 0
-    ASSERT_EQ(red - Red{220}, Red{0});
-    ASSERT_EQ(green - Green{220}, Green{0});
-    ASSERT_EQ(blue - Blue{220}, Blue{0});
+    ASSERT_EQ(red - Red{ 220 }, Red{ 0 });
+    ASSERT_EQ(green - Green{ 220 }, Green{ 0 });
+    ASSERT_EQ(blue - Blue{ 220 }, Blue{ 0 });
 
     // Test that += -= works as expected
-    red += Red{1};
-    green += Green{1};
-    blue += Blue{1};
+    red += Red{ 1 };
+    green += Green{ 1 };
+    blue += Blue{ 1 };
 
-    ASSERT_EQ(red, Red{101});
-    ASSERT_EQ(green, Green{101});
-    ASSERT_EQ(blue, Blue{101});
+    ASSERT_EQ(red, Red{ 101 });
+    ASSERT_EQ(green, Green{ 101 });
+    ASSERT_EQ(blue, Blue{ 101 });
 
-    red -= Red{1};
-    blue -= Blue{1};
-    green -= Green{1};
+    red -= Red{ 1 };
+    blue -= Blue{ 1 };
+    green -= Green{ 1 };
 
-    ASSERT_EQ(red, Red{100});
-    ASSERT_EQ(green, Green{100});
-    ASSERT_EQ(blue, Blue{100});
+    ASSERT_EQ(red, Red{ 100 });
+    ASSERT_EQ(green, Green{ 100 });
+    ASSERT_EQ(blue, Blue{ 100 });
 
     // Test that Red, Green, and Blue are zero cost abstractions
     ASSERT_EQ(sizeof(red), sizeof(uint8_t));
@@ -65,25 +65,24 @@ TEST(TestColor, RGBPixelArithmetic)
     using ClearPNG::Concepts::CRGBPixel;
     static_assert(CRGBPixel<RGBPixel>);
 
-    RGBPixel p1 {Red{10}, Green{102}, Blue{204}};
-    RGBPixel p2 {Red{255}, Green{242}, Blue{179}};
-    RGBPixel p3 {Red{191}, Green{150}, Blue{61}};
+    RGBPixel p1{ Red{ 10 }, Green{ 102 }, Blue{ 204 } };
+    RGBPixel p2{ Red{ 255 }, Green{ 242 }, Blue{ 179 } };
+    RGBPixel p3{ Red{ 191 }, Green{ 150 }, Blue{ 61 } };
 
-    RGBPixel const WHITE {Red{255}, Green{255}, Blue{255}};
-    RGBPixel const BLACK {Red{0}, Green{0}, Blue{0}};
+    RGBPixel const WHITE{ Red{ 255 }, Green{ 255 }, Blue{ 255 } };
+    RGBPixel const BLACK{ Red{ 0 }, Green{ 0 }, Blue{ 0 } };
 
     // Test that we can perform RGB pixel equality
-    ASSERT_EQ(p1, RGBPixel(Red{10}, Green{102}, Blue{204}));
-
+    ASSERT_EQ(p1, RGBPixel(Red{ 10 }, Green{ 102 }, Blue{ 204 }));
 
     // Test RGB pixel add
-    ASSERT_EQ(p1 + p2, RGBPixel(Red{255}, Green{255}, Blue{255}));
+    ASSERT_EQ(p1 + p2, RGBPixel(Red{ 255 }, Green{ 255 }, Blue{ 255 }));
     auto p4 = p1;
-    p4 += RGBPixel(Red{1}, Green{1}, Blue{1});
-    ASSERT_EQ(p4, RGBPixel(Red{11}, Green{103}, Blue{205}));
+    p4 += RGBPixel(Red{ 1 }, Green{ 1 }, Blue{ 1 });
+    ASSERT_EQ(p4, RGBPixel(Red{ 11 }, Green{ 103 }, Blue{ 205 }));
 
     // Test RGB pixel multiply
-    ASSERT_EQ(p1 * p2, RGBPixel(Red{10}, Green{96}, Blue{143}));
+    ASSERT_EQ(p1 * p2, RGBPixel(Red{ 10 }, Green{ 96 }, Blue{ 143 }));
     // Test that multiplying by a white pixel leaves the pixel the same
     auto p5 = p1;
     p5 *= WHITE;
@@ -93,7 +92,8 @@ TEST(TestColor, RGBPixelArithmetic)
     ASSERT_EQ(p5, BLACK);
 
     // Test RGB pixel screen
-    ASSERT_EQ(RGBScreen(p1, p3), RGBPixel(Red{194}, Green{192}, Blue{217}));
+    ASSERT_EQ(
+        RGBScreen(p1, p3), RGBPixel(Red{ 194 }, Green{ 192 }, Blue{ 217 }));
     // Test that screening with black leaves the pixel alone
     ASSERT_EQ(RGBScreen(p1, BLACK), p1);
     // Test that screening with white results in white
@@ -105,14 +105,13 @@ TEST(TestColor, RGBDistances)
     using ClearPNG::Concepts::CPixelDistance;
     static_assert(CPixelDistance<decltype(EuclideanPixelDistance), RGBPixel>);
     static_assert(
-        CPixelDistance<decltype(WeightedEuclideanPixelDistance), RGBPixel>
-    );
+        CPixelDistance<decltype(WeightedEuclideanPixelDistance), RGBPixel>);
 
-    RGBPixel p1 {Red{10}, Green{102}, Blue{204}};
-    RGBPixel p2 {Red{255}, Green{242}, Blue{179}};
+    RGBPixel p1{ Red{ 10 }, Green{ 102 }, Blue{ 204 } };
+    RGBPixel p2{ Red{ 255 }, Green{ 242 }, Blue{ 179 } };
 
-    RGBPixel const WHITE {Red{255}, Green{255}, Blue{255}};
-    RGBPixel const BLACK {Red{0}, Green{0}, Blue{0}};
+    RGBPixel const WHITE{ Red{ 255 }, Green{ 255 }, Blue{ 255 } };
+    RGBPixel const BLACK{ Red{ 0 }, Green{ 0 }, Blue{ 0 } };
 
     // Euclidean distance implemented by operator-
 
@@ -127,12 +126,13 @@ TEST(TestColor, RGBDistances)
     // p2, which is lighter in value, should be closer to white than p1
     ASSERT_LT(p2 - WHITE, p1 - WHITE);
 
-
     // Weighted Euclidean
     // distances should not depend on order
-    ASSERT_FLOAT_EQ(WeightedEuclideanPixelDistance(WHITE, BLACK), 
+    ASSERT_FLOAT_EQ(
+        WeightedEuclideanPixelDistance(WHITE, BLACK),
         WeightedEuclideanPixelDistance(BLACK, WHITE));
-    ASSERT_FLOAT_EQ(WeightedEuclideanPixelDistance(p1, p2), 
+    ASSERT_FLOAT_EQ(
+        WeightedEuclideanPixelDistance(p1, p2),
         WeightedEuclideanPixelDistance(p2, p1));
 
     // sample calculations
@@ -140,16 +140,17 @@ TEST(TestColor, RGBDistances)
     ASSERT_FLOAT_EQ(WeightedEuclideanPixelDistance(p2, p1), 509.6322203);
 
     // p2, which is lighter, should be closer to white than p1
-    ASSERT_LT(WeightedEuclideanPixelDistance(p2, WHITE), 
+    ASSERT_LT(
+        WeightedEuclideanPixelDistance(p2, WHITE),
         WeightedEuclideanPixelDistance(p1, WHITE));
 
-/*
-    // CIELAB
-    auto cielab_distance = [](RGBPixel const& lhs, RGBPixel const& rhs) 
-        -> float 
-    {
-        RGBDistance<Distance_t::CIEDE2000> impl;
-        return distance(impl, lhs, rhs);
-    };
-*/
+    /*
+        // CIELAB
+        auto cielab_distance = [](RGBPixel const& lhs, RGBPixel const& rhs)
+            -> float
+        {
+            RGBDistance<Distance_t::CIEDE2000> impl;
+            return distance(impl, lhs, rhs);
+        };
+    */
 }

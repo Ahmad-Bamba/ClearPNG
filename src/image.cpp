@@ -1,1 +1,0 @@
-#include "ClearPNG/image.h"

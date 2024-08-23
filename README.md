@@ -1,6 +1,11 @@
 # ClearPNG
 PNG parser written in modern C++ with 2D shader support
 
+## Library structure
+
+ClearPNG is a header + source library.
+It's configured to build with CMake, but the source file, png.cpp, can simply be copied into the project and built as long as the header file, png.hpp, is in a directory called "ClearPNG". 
+
 ## User stories
 | Story | Done? |
 | -------- |--------|

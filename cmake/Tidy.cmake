@@ -6,8 +6,8 @@
 
 function(ADDCLANGTIDY target)
     find_program(CLANG-TIDY_EXE 
-        NAMES clang-tidy clang-tidy-10 clang-tidy-11
-        clang-tidy-12 clang-tidy-13 clang-tidy-14
+        NAMES clang-tidy clang-tidy-18 clang-tidy-17
+        clang-tidy-16 clang-tidy-15 clang-tidy-14
         REQUIRED
     )
     message(STATUS "clang-tidy=${CLANG-TIDY_EXE}")

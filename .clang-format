@@ -3,10 +3,15 @@ IndentWidth: 4
 UseTab: Never
 ColumnLimit: 80
 BreakBeforeBraces: Stroustrup
+AllowAllArgumentsOnNextLine: true
 ---
 Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
-AccessModifierOffset: -4
+AccessModifierOffset: -1
 IndentAccessModifiers: false
 RequiresClausePosition: OwnLine
+QualifierAlignment: Right
+AlignAfterOpenBracket: AlwaysBreak
+InsertBraces: true
+Cpp11BracedListStyle: false
